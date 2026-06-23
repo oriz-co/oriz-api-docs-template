@@ -1,0 +1,60 @@
+name: deploy
+
+# Path D — bespoke Stripe/Linear-style hero + live data preview + README content.
+# Uses oriz-co/oriz-api-docs-template as the build template.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "README.md"
+      - "data/**"
+      - "CNAME"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout host API repo
+        uses: actions/checkout@v4
+        with:
+          path: host
+
+      - name: Checkout docs template
+        uses: actions/checkout@v4
+        with:
+          repository: oriz-co/oriz-api-docs-template
+          path: template
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.8.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: template/template/pnpm-lock.yaml
+
+      - name: Build site from README + data/
+        run: node template/bootstrap.mjs --src="${{ github.workspace }}/host" --dest="${{ github.workspace }}/dist"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

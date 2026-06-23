@@ -1,34 +1,66 @@
 # oriz-api-docs-template
 
-Reusable GitHub Actions template + Starlight scaffold for every `oriz-co/oriz-*-api` repo.
+The shared template that powers every `*.api.oriz.in` landing page in the
+[oriz family](https://oriz.in).
 
-## What it gives an API repo
+## How it works
 
-1. **`scrape.yml`** — runs `pnpm run scrape` daily (default 18:00 IST = 12:30 UTC) and
-   commits any change in `data/` back to `main`. Manual `workflow_dispatch` too.
-2. **`deploy.yml`** — on every push to `main` that touches `README.md` or `data/**`:
-   - Clones this template's `starlight-template/` into `_docs/`
-   - Drops the API repo's `README.md` into `src/content/docs/index.mdx` (with Starlight frontmatter prepended)
-   - Generates `src/content/docs/api.mdx` from `data/latest.json` (shape + first row)
-   - Builds with Astro + Starlight, deploys to GitHub Pages
+Each API repo (e.g. `oriz-currency-rates-api`) keeps:
 
-## Wiring an existing API repo
+- `README.md` — the API's docs, the single source of truth you edit
+- `data/latest.json` — the live data the scraper writes
+- `CNAME` — the custom subdomain
+- `.github/workflows/scrape.yml` — daily 18:00 IST cron that refreshes `data/`
+- `.github/workflows/deploy.yml` — the workflow that runs **this** template
 
-```bash
-# inside the API repo
-mkdir -p .github/workflows
-curl -fsSL https://raw.githubusercontent.com/oriz-co/oriz-api-docs-template/main/.github/workflows/scrape.yml  -o .github/workflows/scrape.yml
-curl -fsSL https://raw.githubusercontent.com/oriz-co/oriz-api-docs-template/main/.github/workflows/deploy.yml -o .github/workflows/deploy.yml
-git add .github/workflows && git commit -m "chore(ci): adopt oriz-api-docs-template" && git push
+On each push to `main` (or when `scrape.yml` updates `data/`), `deploy.yml`:
+
+1. Checks out the host API repo
+2. Checks out this template repo
+3. Runs `bootstrap.mjs` which copies the host's `README.md` + `data/` into the
+   template, builds a one-page Astro site, and outputs `dist/`
+4. Deploys `dist/` to GitHub Pages
+
+## The page layout
+
+Every `*.api.oriz.in` looks like:
+
+```
+┌──────────────────────────────────────────┐
+│  oriz header (home, account, status)     │
+├──────────────────────────────────────────┤
+│  HERO                                    │
+│    <h1 from README>                      │
+│    <description from README first para>  │
+│    curl https://<sub>.api.oriz.in/data/  │
+│    [Try it ↓]  [GitHub →]                │
+├──────────────────────────────────────────┤
+│  LIVE DATA PREVIEW (pretty-printed JSON) │
+├──────────────────────────────────────────┤
+│  README CONTENT (rendered markdown)      │
+├──────────────────────────────────────────┤
+│  oriz footer                             │
+└──────────────────────────────────────────┘
 ```
 
-Then in repo Settings → Pages: source = "GitHub Actions".
+## Tech stack (2026-06-23 latest stable)
 
-## Design
+- Astro 7 (static, no JS framework)
+- Biome 2 (formatter + linter — replaces Prettier + ESLint)
+- TypeScript 6
+- Shiki 4 (code highlighting)
+- marked 18 (README parsing)
+- pnpm 11.8
 
-Paper-tone cream + forest-green accents. Self-contained CSS in `starlight-template/src/styles/oriz.css`.
-No external dependencies on `astro-shell` / `oriz-ui` (so Starlight installs cleanly without the oriz monorepo).
+## Local dev
+
+```bash
+cd template
+pnpm install
+# Drop a sample README.md + data/latest.json into src/content/ + public/data/
+pnpm dev
+```
 
 ## License
 
-MIT
+MIT. Part of the oriz family — https://oriz.in

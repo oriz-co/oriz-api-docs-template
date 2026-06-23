@@ -1,0 +1,26 @@
+{
+  "name": "@oriz-co/api-docs-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Path D — Stripe/Linear-style hero + live data + README content. Powers every *.api.oriz.in landing page.",
+  "type": "module",
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check && tsc --noEmit",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "ci": "biome ci ."
+  },
+  "dependencies": {
+    "astro": "^7.0.0",
+    "marked": "^18.0.5",
+    "shiki": "^4.2.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "@biomejs/biome": "^2.5.0",
+    "typescript": "^6.0.3"
+  }
+}

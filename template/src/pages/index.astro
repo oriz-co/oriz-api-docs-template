@@ -1,0 +1,277 @@
+---
+import { marked } from 'marked'
+import { codeToHtml } from 'shiki'
+import { readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { parseReadme } from '../lib/parse-readme'
+
+// Read host-API content copied in by bootstrap.mjs
+const ROOT = process.cwd()
+const README_PATH = join(ROOT, 'src', 'content', 'readme.md')
+const DATA_PATH = join(ROOT, 'public', 'data', 'latest.json')
+const META_PATH = join(ROOT, 'src', 'content', 'meta.json')
+
+// Host meta written by bootstrap (slug, subdomain, repo URL)
+const meta = existsSync(META_PATH)
+	? JSON.parse(readFileSync(META_PATH, 'utf8'))
+	: { slug: 'unknown', subdomain: 'unknown.api.oriz.in', repo: '' }
+
+const readmeText = existsSync(README_PATH) ? readFileSync(README_PATH, 'utf8') : ''
+const parsed = parseReadme(readmeText, meta.slug ?? 'oriz API')
+
+const bodyHtml = await marked.parse(parsed.body, { gfm: true, breaks: false })
+
+// Live data preview (truncated to first 1500 chars of pretty JSON)
+let dataPreview = ''
+let dataAvailable = false
+try {
+	if (existsSync(DATA_PATH)) {
+		const raw = readFileSync(DATA_PATH, 'utf8')
+		const obj = JSON.parse(raw)
+		const pretty = JSON.stringify(obj, null, 2)
+		dataPreview = pretty.length > 1500 ? `${pretty.slice(0, 1500)}\n  ... (${pretty.length - 1500} more chars)` : pretty
+		dataAvailable = true
+	}
+} catch {
+	dataPreview = ''
+}
+
+const dataHtml = dataAvailable
+	? await codeToHtml(dataPreview, { lang: 'json', theme: 'github-light' })
+	: ''
+
+const fetchUrl = `https://${meta.subdomain}/data/latest.json`
+const fetchHtml = await codeToHtml(`curl -s ${fetchUrl}`, { lang: 'bash', theme: 'github-light' })
+
+const title = `${parsed.title} · oriz API`
+---
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={parsed.description} />
+		<link rel="icon" href="/favicon.svg" />
+		<style is:global>
+			:root {
+				--bg: #faf6ef;
+				--ink: #1a1a1a;
+				--muted: #6b6b6b;
+				--accent: #2f4f3a;
+				--accent-soft: #e7efe9;
+				--rule: #e6dfd2;
+				--card: #ffffff;
+				--code-bg: #f5f1e8;
+				--mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+				--serif: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+				--sans: Inter, system-ui, -apple-system, sans-serif;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #1a1612;
+					--ink: #f4ede0;
+					--muted: #a59c8d;
+					--accent: #88c0a5;
+					--accent-soft: #2a3a30;
+					--rule: #3a342a;
+					--card: #221d18;
+					--code-bg: #2a241d;
+				}
+			}
+			* { box-sizing: border-box }
+			html, body { margin: 0; padding: 0 }
+			body {
+				background: var(--bg);
+				color: var(--ink);
+				font-family: var(--sans);
+				font-size: 16px;
+				line-height: 1.6;
+				-webkit-font-smoothing: antialiased;
+			}
+			a { color: var(--accent); text-decoration: none }
+			a:hover { text-decoration: underline }
+			.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px }
+			header.site {
+				border-bottom: 1px solid var(--rule);
+				padding: 18px 0;
+			}
+			.brand { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; letter-spacing: -.01em }
+			.brand-dot { color: var(--accent) }
+			nav.site a { margin-left: 18px; color: var(--muted); font-size: .92rem }
+			nav.site a:hover { color: var(--ink) }
+			.flex { display: flex; align-items: center; justify-content: space-between }
+
+			section.hero { padding: 64px 0 32px }
+			h1 {
+				font-family: var(--serif);
+				font-size: clamp(2rem, 4.5vw, 3rem);
+				line-height: 1.15;
+				letter-spacing: -.02em;
+				margin: 0 0 14px;
+				font-weight: 600;
+			}
+			.lede {
+				font-size: 1.2rem;
+				color: var(--muted);
+				margin: 0 0 32px;
+				max-width: 60ch;
+			}
+			.cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 24px 0 0 }
+			.btn {
+				display: inline-flex; align-items: center; gap: 8px;
+				padding: 10px 18px; border-radius: 8px;
+				font-weight: 500; font-size: .95rem;
+				background: var(--accent); color: #faf6ef;
+				border: 1px solid var(--accent);
+				transition: transform .15s, opacity .15s;
+				cursor: pointer;
+			}
+			.btn:hover { transform: translateY(-1px); text-decoration: none; opacity: .92 }
+			.btn-ghost {
+				background: transparent; color: var(--accent);
+				border: 1px solid var(--accent);
+			}
+			.btn-ghost:hover { background: var(--accent-soft) }
+
+			.fetch-card {
+				margin: 28px 0 0;
+				border: 1px solid var(--rule);
+				background: var(--code-bg);
+				border-radius: 10px;
+				overflow: hidden;
+			}
+			.fetch-card .label {
+				font-family: var(--mono);
+				font-size: .72rem;
+				color: var(--muted);
+				padding: 8px 14px;
+				border-bottom: 1px solid var(--rule);
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.fetch-card .label .copy {
+				background: transparent; border: 1px solid var(--rule); border-radius: 6px;
+				padding: 3px 10px; font-family: var(--mono); font-size: .7rem;
+				color: var(--muted); cursor: pointer;
+			}
+			.fetch-card .label .copy:hover { color: var(--accent) }
+			.fetch-card pre, .fetch-card code { margin: 0; padding: 14px; font-size: .85rem }
+
+			section.preview { padding: 24px 0 }
+			section.preview h2 {
+				font-family: var(--serif); font-size: 1.3rem;
+				margin: 0 0 14px; font-weight: 500;
+			}
+			.json-card {
+				border: 1px solid var(--rule);
+				background: var(--code-bg);
+				border-radius: 10px;
+				overflow: auto;
+				max-height: 480px;
+			}
+			.json-card pre { margin: 0; padding: 16px; font-size: .82rem }
+
+			article.readme { padding: 32px 0 64px }
+			article.readme h1, article.readme h2, article.readme h3 {
+				font-family: var(--serif); font-weight: 600;
+				letter-spacing: -.01em; margin: 1.8em 0 .6em;
+			}
+			article.readme h1 { display: none } /* already in hero */
+			article.readme h2 { font-size: 1.5rem; border-bottom: 1px solid var(--rule); padding-bottom: .35em }
+			article.readme h3 { font-size: 1.2rem }
+			article.readme p, article.readme li { font-size: 1rem; line-height: 1.7 }
+			article.readme code { font-family: var(--mono); background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: .88em }
+			article.readme pre {
+				background: var(--code-bg); padding: 14px; border-radius: 8px;
+				overflow: auto; border: 1px solid var(--rule);
+			}
+			article.readme pre code { background: transparent; padding: 0 }
+			article.readme blockquote {
+				border-left: 3px solid var(--accent);
+				padding: 4px 14px; color: var(--muted);
+				background: var(--accent-soft);
+				border-radius: 0 6px 6px 0; margin: 1em 0;
+			}
+			article.readme table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: .9rem }
+			article.readme th, article.readme td { padding: 8px 12px; border: 1px solid var(--rule); text-align: left }
+			article.readme th { background: var(--accent-soft); font-weight: 600 }
+			article.readme a { font-weight: 500 }
+
+			footer.site {
+				border-top: 1px solid var(--rule);
+				padding: 24px 0 48px;
+				color: var(--muted);
+				font-size: .85rem;
+				text-align: center;
+			}
+			footer.site a { color: var(--muted) }
+			footer.site a:hover { color: var(--ink) }
+		</style>
+	</head>
+	<body>
+		<header class="site">
+			<div class="wrap flex">
+				<a class="brand" href="https://oriz.in"><span>oriz</span><span class="brand-dot">.</span><span>in</span></a>
+				<nav class="site">
+					<a href="https://oriz.in">home</a>
+					<a href="https://account.oriz.in">account</a>
+					<a href="https://status.oriz.in">status</a>
+				</nav>
+			</div>
+		</header>
+
+		<main class="wrap">
+			<section class="hero">
+				<h1>{parsed.title}</h1>
+				<p class="lede">{parsed.description || 'A free, public JSON API hosted on GitHub Pages by the oriz family.'}</p>
+
+				<div class="fetch-card">
+					<div class="label">
+						<span>fetch</span>
+						<button class="copy" data-copy={fetchUrl}>copy URL</button>
+					</div>
+					<div set:html={fetchHtml} />
+				</div>
+
+				<div class="cta-row">
+					<a class="btn" href={`/data/latest.json`}>Try it ↓</a>
+					{meta.repo && <a class="btn btn-ghost" href={meta.repo}>GitHub →</a>}
+				</div>
+			</section>
+
+			{dataAvailable && (
+				<section class="preview">
+					<h2>Live data preview</h2>
+					<div class="json-card" set:html={dataHtml} />
+				</section>
+			)}
+
+			{parsed.body && (
+				<article class="readme" set:html={bodyHtml} />
+			)}
+		</main>
+
+		<footer class="site">
+			<div class="wrap">
+				Part of the <a href="https://oriz.in">oriz family</a>. MIT licensed.
+				{meta.repo && <> · <a href={meta.repo}>Edit on GitHub</a></>}
+			</div>
+		</footer>
+
+		<script>
+			document.querySelectorAll<HTMLButtonElement>('button.copy').forEach((btn) => {
+				btn.addEventListener('click', () => {
+					const url = btn.dataset.copy
+					if (!url) return
+					navigator.clipboard.writeText(url).then(() => {
+						const old = btn.textContent
+						btn.textContent = 'copied ✓'
+						setTimeout(() => { btn.textContent = old }, 1400)
+					})
+				})
+			})
+		</script>
+	</body>
+</html>
