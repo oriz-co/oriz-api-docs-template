@@ -1,0 +1,71 @@
+/* Oriz brand — paper-tone cream + forest-green accents.
+   Self-contained, no external deps. Drops into Starlight via customCss. */
+
+:root {
+  /* Paper cream (light mode) */
+  --sl-color-bg: #faf6ee;
+  --sl-color-bg-nav: #f5efde;
+  --sl-color-bg-sidebar: #f5efde;
+  --sl-color-text: #1d2a1f;
+  --sl-color-text-accent: #2f5d3a;
+  --sl-color-accent: #2f5d3a;          /* forest green */
+  --sl-color-accent-high: #1f4128;
+  --sl-color-accent-low: #d6e6da;
+  --sl-color-white: #1d2a1f;
+  --sl-color-gray-1: #2c3a2f;
+  --sl-color-gray-2: #4a5a4d;
+  --sl-color-gray-3: #6b7a6e;
+  --sl-color-gray-4: #9aa89c;
+  --sl-color-gray-5: #c4cec6;
+  --sl-color-gray-6: #e2e6dc;
+  --sl-color-gray-7: #ede9da;
+  --sl-color-hairline: #d8d1ba;
+  --sl-color-hairline-light: #eae3cc;
+  --sl-color-hairline-shade: #c8c0a4;
+  --sl-color-bg-inline-code: #efe9d3;
+  --sl-color-bg-accent: #2f5d3a;
+  --sl-color-text-invert: #faf6ee;
+
+  /* Headings: a touch warmer ink, serif for that paper feel */
+  --sl-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter", sans-serif;
+  --sl-font-system-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Dark mode — keep forest accent, deeper ink */
+:root[data-theme="dark"] {
+  --sl-color-bg: #14201a;
+  --sl-color-bg-nav: #0f1813;
+  --sl-color-bg-sidebar: #0f1813;
+  --sl-color-text: #e8ead8;
+  --sl-color-text-accent: #7ec089;
+  --sl-color-accent: #7ec089;
+  --sl-color-accent-high: #b6dbbd;
+  --sl-color-accent-low: #1c3525;
+  --sl-color-white: #f5efde;
+  --sl-color-gray-1: #e8ead8;
+  --sl-color-gray-2: #c4cec6;
+  --sl-color-gray-3: #9aa89c;
+  --sl-color-gray-4: #6b7a6e;
+  --sl-color-gray-5: #4a5a4d;
+  --sl-color-gray-6: #2c3a2f;
+  --sl-color-gray-7: #1d2a1f;
+  --sl-color-hairline: #2c3a2f;
+  --sl-color-hairline-light: #1d2a1f;
+  --sl-color-hairline-shade: #3a4a3e;
+  --sl-color-bg-inline-code: #1d2a1f;
+}
+
+/* Small typographic touches */
+h1, h2, h3, h4 {
+  letter-spacing: -0.01em;
+}
+
+/* Code blocks: paper-ish frame */
+.expressive-code {
+  border-radius: 6px;
+}
+
+/* Subtle footer */
+footer.sl-footer {
+  border-top: 1px solid var(--sl-color-hairline);
+}
